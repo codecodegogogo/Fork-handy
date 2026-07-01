@@ -1,12 +1,10 @@
 name: "Main Branch Build"
 
-# Runs the full cross-platform build on every push to main so breakage is
-# caught before a manual release is triggered. Artifacts are kept for 30 days
-# so any commit on main has a downloadable, testable build.
+# Upstream-style signed cross-platform build. In a personal fork this is kept
+# manual because it expects signing secrets. Use "Unsigned Build" for automatic
+# artifacts after pushing to main.
 
-on:
-  push:
-    branches: [main]
+on: workflow_dispatch
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

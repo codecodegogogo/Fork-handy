@@ -1,0 +1,24 @@
+name: "Unsigned Windows Build"
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-x64:
+    permissions:
+      contents: write
+    uses: ./.github/workflows/build.yml
+    with:
+      platform: "windows-latest"
+      target: "x86_64-pc-windows-msvc"
+      build-args: ""
+      asset-prefix: "handy-unsigned"
+      upload-artifacts: true
+      sign-binaries: false
+      disable-updater-artifacts: true
