@@ -32,7 +32,9 @@ tauri_panel! {
     })
 }
 
-const OVERLAY_WIDTH: f64 = 172.0;
+// The visible pill is 172px wide in RecordingOverlay.css. The native transparent
+// window is wider so WebView/compositor edge clipping cannot cut off the pill.
+const OVERLAY_WIDTH: f64 = 200.0;
 const OVERLAY_HEIGHT: f64 = 36.0;
 
 #[cfg(target_os = "macos")]

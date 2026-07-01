@@ -14,6 +14,7 @@ import { getLanguageDirection } from "@/lib/utils/rtl";
 type OverlayState = "recording" | "transcribing" | "processing";
 
 const LEVEL_BAR_COUNT = 9;
+const OVERLAY_FOREGROUND = "#FFFFFF";
 
 const RecordingOverlay: React.FC = () => {
   const { t } = useTranslation();
@@ -70,9 +71,9 @@ const RecordingOverlay: React.FC = () => {
 
   const getIcon = () => {
     if (state === "recording") {
-      return <MicrophoneIcon />;
+      return <MicrophoneIcon color={OVERLAY_FOREGROUND} />;
     } else {
-      return <TranscriptionIcon />;
+      return <TranscriptionIcon color={OVERLAY_FOREGROUND} />;
     }
   };
 
@@ -115,7 +116,7 @@ const RecordingOverlay: React.FC = () => {
               commands.cancelOperation();
             }}
           >
-            <CancelIcon />
+            <CancelIcon color={OVERLAY_FOREGROUND} />
           </div>
         )}
       </div>
