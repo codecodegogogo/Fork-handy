@@ -80,11 +80,14 @@ jobs:
           echo "Application version from tauri.conf.json: $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Disable updater artifacts
-        if: inputs.disable-updater-artifacts
+      - name: Disable unsigned bundle requirements
+        if: inputs.disable-updater-artifacts || !inputs.sign-binaries
         shell: bash
+        env:
+          DISABLE_UPDATER_ARTIFACTS: ${{ inputs.disable-updater-artifacts }}
+          SIGN_BINARIES: ${{ inputs.sign-binaries }}
         run: |
-          node -e "const fs=require('fs'); const p='src-tauri/tauri.conf.json'; const j=JSON.parse(fs.readFileSync(p,'utf8')); j.bundle.createUpdaterArtifacts=false; fs.writeFileSync(p, JSON.stringify(j,null,2)+'\n');"
+          node -e "const fs=require('fs'); const p='src-tauri/tauri.conf.json'; const j=JSON.parse(fs.readFileSync(p,'utf8')); if (process.env.DISABLE_UPDATER_ARTIFACTS === 'true') j.bundle.createUpdaterArtifacts=false; if (process.env.SIGN_BINARIES !== 'true' && j.bundle && j.bundle.windows) delete j.bundle.windows.signCommand; fs.writeFileSync(p, JSON.stringify(j,null,2)+'\n');"
 
       - name: Determine build profile
         id: build-profile
