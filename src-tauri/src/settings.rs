@@ -351,6 +351,8 @@ pub struct AppSettings {
     pub audio_feedback_volume: f32,
     #[serde(default = "default_sound_theme")]
     pub sound_theme: SoundTheme,
+    #[serde(default)]
+    pub listening_sound_migrated: bool,
     #[serde(default = "default_start_hidden")]
     pub start_hidden: bool,
     #[serde(default = "default_autostart_enabled")]
@@ -718,6 +720,18 @@ fn ensure_post_process_defaults(settings: &mut AppSettings) -> bool {
     changed
 }
 
+fn ensure_listening_sound_defaults(settings: &mut AppSettings) -> bool {
+    if settings.listening_sound_migrated {
+        return false;
+    }
+
+    settings.audio_feedback = true;
+    settings.sound_theme = SoundTheme::Sing;
+    settings.listening_sound_migrated = true;
+    debug!("Migrated listening sound defaults to Sing with audio feedback enabled");
+    true
+}
+
 pub const SETTINGS_STORE_PATH: &str = "settings_store.json";
 
 pub fn get_default_settings() -> AppSettings {
@@ -778,6 +792,7 @@ pub fn get_default_settings() -> AppSettings {
         audio_feedback: true,
         audio_feedback_volume: default_audio_feedback_volume(),
         sound_theme: default_sound_theme(),
+        listening_sound_migrated: true,
         start_hidden: default_start_hidden(),
         autostart_enabled: default_autostart_enabled(),
         update_checks_enabled: default_update_checks_enabled(),
@@ -892,7 +907,9 @@ pub fn load_or_create_app_settings(app: &AppHandle) -> AppSettings {
         default_settings
     };
 
-    if ensure_post_process_defaults(&mut settings) {
+    let settings_changed = ensure_post_process_defaults(&mut settings)
+        | ensure_listening_sound_defaults(&mut settings);
+    if settings_changed {
         store.set("settings", serde_json::to_value(&settings).unwrap());
     }
 
@@ -916,7 +933,9 @@ pub fn get_settings(app: &AppHandle) -> AppSettings {
         default_settings
     };
 
-    if ensure_post_process_defaults(&mut settings) {
+    let settings_changed = ensure_post_process_defaults(&mut settings)
+        | ensure_listening_sound_defaults(&mut settings);
+    if settings_changed {
         store.set("settings", serde_json::to_value(&settings).unwrap());
     }
 
