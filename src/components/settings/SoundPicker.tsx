@@ -19,9 +19,10 @@ export const SoundPicker: React.FC<SoundPickerProps> = ({
   const playTestSound = useSettingsStore((state) => state.playTestSound);
   const customSounds = useSettingsStore((state) => state.customSounds);
 
-  const selectedTheme = getSetting("sound_theme") ?? "marimba";
+  const selectedTheme = getSetting("sound_theme") ?? "sing";
 
   const options: DropdownOption[] = [
+    { value: "sing", label: "Sing" },
     { value: "marimba", label: "Marimba" },
     { value: "pop", label: "Pop" },
   ];
@@ -47,7 +48,10 @@ export const SoundPicker: React.FC<SoundPickerProps> = ({
         <Dropdown
           selectedValue={selectedTheme}
           onSelect={(value) =>
-            updateSetting("sound_theme", value as "marimba" | "pop" | "custom")
+            updateSetting(
+              "sound_theme",
+              value as "sing" | "marimba" | "pop" | "custom",
+            )
           }
           options={options}
         />
