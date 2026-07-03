@@ -224,8 +224,8 @@
         "loading": "Loading..."
       },
       "audioFeedback": {
-        "label": "Audio Feedback",
-        "description": "Play sound when recording starts and stops"
+        "label": "Listening Sound Cues",
+        "description": "Play the start and stop sounds with the recording overlay"
       },
       "outputDevice": {
         "title": "Output Device",

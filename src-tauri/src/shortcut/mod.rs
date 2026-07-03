@@ -491,6 +491,18 @@ pub fn change_audio_feedback_setting(app: AppHandle, enabled: bool) -> Result<()
 
 #[tauri::command]
 #[specta::specta]
+pub fn change_listening_sound_feedback_setting(
+    app: AppHandle,
+    enabled: bool,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.listening_sound_feedback = enabled;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
 pub fn change_audio_feedback_volume_setting(app: AppHandle, volume: f32) -> Result<(), String> {
     let mut settings = settings::get_settings(&app);
     settings.audio_feedback_volume = volume;
@@ -623,24 +635,6 @@ pub fn change_autostart_setting(app: AppHandle, enabled: bool) -> Result<(), Str
         "settings-changed",
         serde_json::json!({
             "setting": "autostart_enabled",
-            "value": enabled
-        }),
-    );
-
-    Ok(())
-}
-
-#[tauri::command]
-#[specta::specta]
-pub fn change_update_checks_setting(app: AppHandle, enabled: bool) -> Result<(), String> {
-    let mut settings = settings::get_settings(&app);
-    settings.update_checks_enabled = enabled;
-    settings::write_settings(&app, settings);
-
-    let _ = app.emit(
-        "settings-changed",
-        serde_json::json!({
-            "setting": "update_checks_enabled",
             "value": enabled
         }),
     );

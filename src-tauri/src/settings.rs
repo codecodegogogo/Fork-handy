@@ -347,6 +347,8 @@ pub struct AppSettings {
     pub bindings: HashMap<String, ShortcutBinding>,
     pub push_to_talk: bool,
     pub audio_feedback: bool,
+    #[serde(default = "default_listening_sound_feedback")]
+    pub listening_sound_feedback: bool,
     #[serde(default = "default_audio_feedback_volume")]
     pub audio_feedback_volume: f32,
     #[serde(default = "default_sound_theme")]
@@ -357,8 +359,6 @@ pub struct AppSettings {
     pub start_hidden: bool,
     #[serde(default = "default_autostart_enabled")]
     pub autostart_enabled: bool,
-    #[serde(default = "default_update_checks_enabled")]
-    pub update_checks_enabled: bool,
     #[serde(default = "default_model")]
     pub selected_model: String,
     #[serde(default = "default_always_on_microphone")]
@@ -462,10 +462,6 @@ fn default_autostart_enabled() -> bool {
     false
 }
 
-fn default_update_checks_enabled() -> bool {
-    true
-}
-
 fn default_selected_language() -> String {
     "auto".to_string()
 }
@@ -507,6 +503,10 @@ fn default_recording_retention_period() -> RecordingRetentionPeriod {
 
 fn default_audio_feedback_volume() -> f32 {
     1.0
+}
+
+fn default_listening_sound_feedback() -> bool {
+    true
 }
 
 fn default_sound_theme() -> SoundTheme {
@@ -726,6 +726,7 @@ fn ensure_listening_sound_defaults(settings: &mut AppSettings) -> bool {
     }
 
     settings.audio_feedback = true;
+    settings.listening_sound_feedback = true;
     settings.sound_theme = SoundTheme::Sing;
     settings.listening_sound_migrated = true;
     debug!("Migrated listening sound defaults to Sing with audio feedback enabled");
@@ -790,12 +791,12 @@ pub fn get_default_settings() -> AppSettings {
         bindings,
         push_to_talk: true,
         audio_feedback: true,
+        listening_sound_feedback: default_listening_sound_feedback(),
         audio_feedback_volume: default_audio_feedback_volume(),
         sound_theme: default_sound_theme(),
         listening_sound_migrated: true,
         start_hidden: default_start_hidden(),
         autostart_enabled: default_autostart_enabled(),
-        update_checks_enabled: default_update_checks_enabled(),
         selected_model: "".to_string(),
         always_on_microphone: false,
         selected_microphone: None,

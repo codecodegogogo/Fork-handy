@@ -224,8 +224,8 @@
         "loading": "加载中..."
       },
       "audioFeedback": {
-        "label": "音频反馈",
-        "description": "录制开始和停止时播放声音"
+        "label": "语音条提示音",
+        "description": "显示录音语音条时播放开始和结束提示音"
       },
       "outputDevice": {
         "title": "输出设备",

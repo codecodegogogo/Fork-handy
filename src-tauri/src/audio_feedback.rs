@@ -47,7 +47,7 @@ fn get_sound_base_dir(settings: &AppSettings) -> tauri::path::BaseDirectory {
 
 pub fn play_feedback_sound(app: &AppHandle, sound_type: SoundType) {
     let settings = settings::get_settings(app);
-    if !settings.audio_feedback {
+    if !settings.listening_sound_feedback {
         return;
     }
     if let Some(path) = resolve_sound_path(app, &settings, sound_type) {
@@ -57,7 +57,7 @@ pub fn play_feedback_sound(app: &AppHandle, sound_type: SoundType) {
 
 pub fn play_feedback_sound_blocking(app: &AppHandle, sound_type: SoundType) {
     let settings = settings::get_settings(app);
-    if !settings.audio_feedback {
+    if !settings.listening_sound_feedback {
         return;
     }
     if let Some(path) = resolve_sound_path(app, &settings, sound_type) {

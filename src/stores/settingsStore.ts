@@ -80,14 +80,14 @@ const settingUpdaters: {
     commands.updateMicrophoneMode(value as boolean),
   audio_feedback: (value) =>
     commands.changeAudioFeedbackSetting(value as boolean),
+  listening_sound_feedback: (value) =>
+    commands.changeListeningSoundFeedbackSetting(value as boolean),
   audio_feedback_volume: (value) =>
     commands.changeAudioFeedbackVolumeSetting(value as number),
   sound_theme: (value) => commands.changeSoundThemeSetting(value as string),
   start_hidden: (value) => commands.changeStartHiddenSetting(value as boolean),
   autostart_enabled: (value) =>
     commands.changeAutostartSetting(value as boolean),
-  update_checks_enabled: (value) =>
-    commands.changeUpdateChecksSetting(value as boolean),
   push_to_talk: (value) => commands.changePttSetting(value as boolean),
   selected_microphone: (value) =>
     commands.setSelectedMicrophone(
