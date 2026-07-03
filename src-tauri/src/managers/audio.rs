@@ -23,8 +23,9 @@ fn set_mute(mute: bool) {
         unsafe {
             use windows::Win32::{
                 Media::Audio::{
-                    eMultimedia, eRender, Endpoints::IAudioEndpointVolume, IMMDeviceEnumerator,
-                    MMDeviceEnumerator,
+                    eMultimedia, eRender, Endpoints::IAudioEndpointVolume,
+                    IAudioSessionControl2, IAudioSessionManager2, IMMDeviceEnumerator,
+                    ISimpleAudioVolume, MMDeviceEnumerator,
                 },
                 System::Com::{CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_MULTITHREADED},
             };
@@ -46,11 +47,44 @@ fn set_mute(mute: bool) {
                 unwrap_or_return!(CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL));
             let default_device =
                 unwrap_or_return!(all_devices.GetDefaultAudioEndpoint(eRender, eMultimedia));
-            let volume_interface = unwrap_or_return!(
-                default_device.Activate::<IAudioEndpointVolume>(CLSCTX_ALL, None)
-            );
 
-            let _ = volume_interface.SetMute(mute, std::ptr::null());
+            match default_device.Activate::<IAudioSessionManager2>(CLSCTX_ALL, None) {
+                Ok(session_manager) => {
+                    let session_enumerator =
+                        unwrap_or_return!(session_manager.GetSessionEnumerator());
+                    let session_count = unwrap_or_return!(session_enumerator.GetCount());
+                    let current_pid = std::process::id();
+
+                    for index in 0..session_count {
+                        let Ok(session_control) = session_enumerator.GetSession(index) else {
+                            continue;
+                        };
+                        let Ok(session_control2) =
+                            session_control.cast::<IAudioSessionControl2>()
+                        else {
+                            continue;
+                        };
+                        let Ok(process_id) = session_control2.GetProcessId() else {
+                            continue;
+                        };
+
+                        if process_id == current_pid {
+                            continue;
+                        }
+
+                        let Ok(simple_volume) = session_control.cast::<ISimpleAudioVolume>() else {
+                            continue;
+                        };
+                        let _ = simple_volume.SetMute(mute, std::ptr::null());
+                    }
+                }
+                Err(_) => {
+                    let volume_interface = unwrap_or_return!(
+                        default_device.Activate::<IAudioEndpointVolume>(CLSCTX_ALL, None)
+                    );
+                    let _ = volume_interface.SetMute(mute, std::ptr::null());
+                }
+            }
         }
     }
 
@@ -291,7 +325,7 @@ impl AudioRecordingManager {
 
         let start_time = Instant::now();
 
-        // Don't mute immediately - caller will handle muting after audio feedback
+        // The caller applies media mute once the recording overlay is visible.
         let mut did_mute_guard = self.did_mute.lock().unwrap();
         *did_mute_guard = false;
 
@@ -333,17 +367,17 @@ impl AudioRecordingManager {
         Ok(())
     }
 
-    pub fn stop_microphone_stream(&self) {
+    fn stop_microphone_stream_inner(&self, restore_mute: bool) {
         let mut open_flag = self.is_open.lock().unwrap();
         if !*open_flag {
             return;
         }
 
         let mut did_mute_guard = self.did_mute.lock().unwrap();
-        if *did_mute_guard {
+        if restore_mute && *did_mute_guard {
             set_mute(false);
+            *did_mute_guard = false;
         }
-        *did_mute_guard = false;
 
         if let Some(rec) = self.recorder.lock().unwrap().as_mut() {
             // If still recording, stop first.
@@ -356,6 +390,10 @@ impl AudioRecordingManager {
 
         *open_flag = false;
         debug!("Microphone stream stopped");
+    }
+
+    pub fn stop_microphone_stream(&self) {
+        self.stop_microphone_stream_inner(true);
     }
 
     /* ---------- mode switching --------------------------------------------- */
@@ -464,7 +502,7 @@ impl AudioRecordingManager {
                     if get_settings(&self.app_handle).lazy_stream_close {
                         self.schedule_lazy_close();
                     } else {
-                        self.stop_microphone_stream();
+                        self.stop_microphone_stream_inner(false);
                     }
                 }
 

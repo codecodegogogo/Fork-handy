@@ -1,6 +1,6 @@
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 use crate::apple_intelligence;
-use crate::audio_feedback::{play_feedback_sound, play_feedback_sound_blocking, SoundType};
+use crate::audio_feedback::{play_feedback_sound_blocking, SoundType};
 use crate::audio_toolkit::{is_microphone_access_denied, is_no_input_device_error};
 use crate::managers::audio::AudioRecordingManager;
 use crate::managers::history::HistoryManager;
@@ -432,11 +432,10 @@ impl ShortcutAction for TranscribeAction {
             match rm.try_start_recording(&binding_id) {
                 Ok(()) => {
                     show_recording_overlay(app);
-                    let rm_clone = Arc::clone(&rm);
+                    rm.apply_mute();
                     let app_clone = app.clone();
                     std::thread::spawn(move || {
                         play_feedback_sound_blocking(&app_clone, SoundType::Start);
-                        rm_clone.apply_mute();
                     });
                 }
                 Err(e) => {
@@ -451,11 +450,10 @@ impl ShortcutAction for TranscribeAction {
                 Ok(()) => {
                     debug!("Recording started in {:?}", recording_start_time.elapsed());
                     show_recording_overlay(app);
+                    rm.apply_mute();
                     let app_clone = app.clone();
-                    let rm_clone = Arc::clone(&rm);
                     std::thread::spawn(move || {
                         play_feedback_sound_blocking(&app_clone, SoundType::Start);
-                        rm_clone.apply_mute();
                     });
                 }
                 Err(e) => {
@@ -512,12 +510,6 @@ impl ShortcutAction for TranscribeAction {
         change_tray_icon(app, TrayIconState::Transcribing);
         show_transcribing_overlay(app);
 
-        // Unmute before playing audio feedback so the stop sound is audible
-        rm.remove_mute();
-
-        // Play audio feedback for recording stop
-        play_feedback_sound(app, SoundType::Stop);
-
         let binding_id = binding_id.to_string(); // Clone binding_id for the async task
         let post_process = self.post_process;
 
@@ -529,7 +521,12 @@ impl ShortcutAction for TranscribeAction {
             );
 
             let stop_recording_time = Instant::now();
-            if let Some(samples) = rm.stop_recording(&binding_id) {
+            let samples = rm.stop_recording(&binding_id);
+
+            play_feedback_sound_blocking(&ah, SoundType::Stop);
+            rm.remove_mute();
+
+            if let Some(samples) = samples {
                 debug!(
                     "Recording stopped and samples retrieved in {:?}, sample count: {}",
                     stop_recording_time.elapsed(),
