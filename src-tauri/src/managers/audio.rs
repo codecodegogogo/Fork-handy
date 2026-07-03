@@ -21,6 +21,7 @@ fn set_mute(mute: bool) {
     #[cfg(target_os = "windows")]
     {
         unsafe {
+            use windows::core::Interface;
             use windows::Win32::{
                 Media::Audio::{
                     eMultimedia, eRender, Endpoints::IAudioEndpointVolume,
